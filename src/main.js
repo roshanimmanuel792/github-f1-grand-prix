@@ -48,9 +48,14 @@ function setState(state) {
   if (!input.enabled) input.clear();
 }
 
+function showError(message) {
+  app.state = 'error';
+  ui.error(message);
+}
+
 function fail(err) {
   console.error(err);
-  ui.error(err.message || String(err));
+  showError(err.message || String(err));
 }
 
 // ---------------------------------------------------------------- data + races
@@ -379,7 +384,7 @@ async function boot() {
   }
   const config = app.config;
   if (!webglSupport()) {
-    return ui.error('This device or browser does not support WebGL 2, which GitHub Grand Prix needs for its 3D circuit. Try a recent Chrome, Edge, Firefox or Safari, and make sure hardware acceleration is enabled.');
+    return showError('This device or browser does not support WebGL 2, which GitHub Grand Prix needs for its 3D circuit. Try a recent Chrome, Edge, Firefox or Safari, and make sure hardware acceleration is enabled.');
   }
   ui.fillSeasons($('season'), currentYear, Number(config.selectedYear) || currentYear);
   $('opt-quality').value = config.quality;
@@ -393,7 +398,7 @@ async function boot() {
   try {
     app.engine = new Engine($('scene'), { quality: config.quality, environment: config.environment, reducedMotion });
   } catch (err) {
-    return ui.error(`Could not start the 3D renderer: ${err.message}`);
+    return showError(`Could not start the 3D renderer: ${err.message}`);
   }
   app.engine.resize(innerWidth, innerHeight);
   app.attractData = await loadAttract(config);
@@ -432,6 +437,7 @@ async function boot() {
       return {
         state: app.state,
         raceState: r?.state,
+        countdown: r?.countdown ?? 0,
         mode: r?.mode,
         camera: app.camera,
         username: r?.dataset.username,

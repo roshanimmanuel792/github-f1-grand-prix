@@ -74,6 +74,7 @@ test('unknown users get a friendly error and can go back', async ({ page }) => {
 test('API data for the wrong user is refused (dataset isolation)', async ({ page }) => {
   await page.route('**/api/contributions**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(OTHER) }));
   await page.goto(`./?user=octo-tester&year=2025${FAST}`);
+  await waitState(page, 'error');
   await expect(page.locator('#error-message')).toContainText('different user');
 });
 
@@ -117,16 +118,16 @@ test('manual driving: responds to keys, pause/resume, camera switch keeps progre
   await page.getByText('Manual', { exact: true }).click();
   await page.getByRole('button', { name: 'Start race' }).click();
   await waitState(page, 'racing');
-  await page.waitForTimeout(3600); // start lights
+  // wait on simulation state, not wall time: software WebGL in CI can run at a few FPS
+  const simWait = (fn, arg) => page.waitForFunction(fn, arg, { timeout: 60_000 });
+  await simWait(() => window.__GP__.info().countdown <= 0); // start lights
+  await page.waitForTimeout(500);
   expect((await info(page)).speedKmh).toBe(0); // no input: the car must not drive itself
   await page.keyboard.down('KeyW');
-  await page.waitForTimeout(1500);
-  const moving = await info(page);
-  expect(moving.speedKmh).toBeGreaterThan(40);
+  await simWait(() => window.__GP__.info().speedKmh > 40);
   await page.keyboard.down('KeyA');
-  await page.waitForTimeout(500);
+  await simWait(() => window.__GP__.info().x < -0.1);
   await page.keyboard.up('KeyA');
-  expect((await info(page)).x).toBeLessThan(-0.1);
   const before = await info(page);
   await page.keyboard.press('KeyC');
   const after = await info(page);
@@ -225,11 +226,10 @@ test('mobile: touch controls drive the car and nothing overflows', async ({ page
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
   }
-  await page.waitForTimeout(3600);
+  await page.waitForFunction(() => window.__GP__.info().countdown <= 0, null, { timeout: 60_000 });
   const gas = page.getByRole('button', { name: 'Accelerate' });
   await gas.dispatchEvent('pointerdown', { pointerId: 1 });
-  await page.waitForTimeout(1200);
-  expect((await info(page)).speedKmh).toBeGreaterThan(30);
+  await page.waitForFunction(() => window.__GP__.info().speedKmh > 30, null, { timeout: 60_000 });
   await gas.dispatchEvent('pointerup', { pointerId: 1 });
 });
 
