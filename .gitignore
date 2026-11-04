@@ -5,3 +5,6 @@ playwright-report/
 .env
 *.tmp
 *.tmp.mjs
+worker/node_modules/
+worker/.wrangler/
+.dev.vars

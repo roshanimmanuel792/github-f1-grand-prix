@@ -1,0 +1,19 @@
+name = "github-grand-prix-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://roshanimmanuel792.github.io,http://localhost:5173,http://localhost:4173"
+FRONTEND_URL = "https://roshanimmanuel792.github.io/github-f1-grand-prix/"
+CACHE_TTL_SECONDS = "3600"
+HISTORY_TTL_SECONDS = "604800"
+# Optional OAuth (public lookups work without it):
+# GITHUB_CLIENT_ID = "Iv1.xxxxxxxx"
+# Secrets (never in this file):  npx wrangler secret put GITHUB_CLIENT_SECRET
+#                                npx wrangler secret put SESSION_SECRET   (>= 32 random chars)
+
+# Per-IP request limit enforced by Cloudflare across all isolates.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 30, period = 60 }

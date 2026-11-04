@@ -3,6 +3,8 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main] # tests + build only; nothing is deployed from a PR
   workflow_dispatch:
   workflow_run:
     workflows: ['Update contributions']
@@ -23,7 +25,7 @@ jobs:
     # After a data update, only deploy if that run succeeded.
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -34,28 +36,41 @@ jobs:
 
       - run: npm ci
 
-      - name: Unit tests
+      - name: Unit + integration tests (game, physics, replay, export, worker API, OAuth)
         run: npm test
 
       - name: Validate contribution data
         run: npm run validate
 
+      # WebGL runs on SwiftShader in CI; ffprobe independently validates exported GIF/MP4 files.
       - name: Browser tests
         run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
           npx playwright install --with-deps chromium
           npx playwright test --reporter=line
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
 
       - name: Production build
         run: npm run build
 
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: dist
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

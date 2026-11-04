@@ -36,6 +36,8 @@ export class AutonomousDriver {
     this.t = 0;
     this.duration = 0;
     this.emergencies = 0;
+    this.rate = 0;
+    this.brakeFor = 0;
   }
 
   get maneuvering() {
@@ -60,8 +62,22 @@ export class AutonomousDriver {
       this.t = Math.min(this.duration, this.t + dt);
       this.x = this.from + (this.to - this.from) * smoothstep(this.t / this.duration);
     }
-    const rate = dt > 0 ? (this.x - prevX) / dt : 0;
-    this.steer += (Math.max(-1, Math.min(1, rate / 2.2)) - this.steer) * Math.min(1, dt * 12);
+    this.rate = dt > 0 ? (this.x - prevX) / dt : 0;
+    this.steer += (Math.max(-1, Math.min(1, this.rate / 2.2)) - this.steer) * Math.min(1, dt * 12);
+    this.brakeFor = Math.max(0, this.brakeFor - dt);
+  }
+
+  /**
+   * Steering command that makes the shared car physics follow this driver's reference line:
+   * feedforward of the line's rate + curvature compensation + position feedback, looking one
+   * grip time-constant ahead to cancel the physics' response lag.
+   */
+  steerFor(car, authority, curve, centrifugal, grip, v01) {
+    if (authority <= 0) return 0;
+    const lag = 1 / grip;
+    const xAhead = this.x + this.rate * lag;
+    const desired = this.rate + 14 * (xAhead - car.x - car.vLat * lag * 0.5) + centrifugal * curve * v01 * v01;
+    return Math.max(-1, Math.min(1, desired / authority));
   }
 
   beginManeuver(lane, distance) {
@@ -70,6 +86,7 @@ export class AutonomousDriver {
     if (duration < MIN_COMFORT_S) {
       duration = Math.max(0.05, timeToGo * 0.9);
       this.emergencies++;
+      this.brakeFor = 0.25; // tight manoeuvre: scrub speed while turning in
     }
     this.log?.({
       type: 'lane-change',

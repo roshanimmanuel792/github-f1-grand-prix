@@ -1,14 +1,16 @@
 <div align="center">
 
-# 🏁 GITHUB F1 GRAND PRIX
+# 🏁 GITHUB GRAND PRIX
 
-**My GitHub contribution calendar, raced as an autonomous pseudo-3D Formula 1 arcade game.**
+**Race any GitHub user's contribution year in 3D. Every day is a stretch of circuit; every contribution is an obstacle and a point.**
 
 <a href="https://roshanimmanuel792.github.io/github-f1-grand-prix/">
-  <img src="docs/preview.gif" alt="Animated preview: an F1 car races down a curving circuit, steering around obstacles generated from daily GitHub contributions while the score climbs" width="640" />
+  <img src="docs/preview.gif" alt="Full-season replay at 2x: a 3D Formula-style car races a curving circuit, steering around obstacles generated from each day's GitHub contributions while the score climbs to the yearly total" width="640" />
 </a>
 
 ### [▶ PLAY GITHUB GRAND PRIX](https://roshanimmanuel792.github.io/github-f1-grand-prix/)
+
+<sub>The preview above is the game's own full-season replay export (2× speed) of this repository owner's season.</sub>
 
 </div>
 
@@ -22,139 +24,66 @@
 <sub>Contributions from 2026-01-01 to 2026-11-04 · source: GitHub GraphQL API · refreshed daily by GitHub Actions</sub>
 <!-- STATS:END -->
 
-The final score is always the exact sum of the season's daily contributions — no bonuses, no multipliers.
+## 🎮 How it works
 
-## 🎮 How the race works
+1. Enter **any GitHub username** and pick a season (2008 → now). Public contribution data only; no sign-in needed. Optionally sign in with GitHub to include *your own* private contribution counts.
+2. Choose **Autonomous** (the AI drives) or **Manual** (you drive), plus camera, graphics quality and conditions (day, sunset, night).
+3. Race the whole season. Each calendar day is 40 m of track; that day's contributions become an obstacle:
 
-- **Every calendar day is one stretch of track**, from January 1 to the latest day GitHub has data for (never future dates). Zero-contribution days are still raced; they're just clear track.
-- **Each day's contribution count becomes an obstacle** on that day's stretch:
+   | Daily contributions | Obstacle |
+   | :-: | --- |
+   | 0 | Clear track |
+   | 1–2 | Jersey road block |
+   | 3–4 | Traffic cones / tyre stack |
+   | 5–9 | Tyre wall across two lanes |
+   | 10+ | Chevron barrier with one gap (green arrow) |
 
-  | Daily contributions | Obstacle | Difficulty |
-  | :-: | --- | --- |
-  | 0 | Clear track | Clear |
-  | 1–2 | Road block | Easy |
-  | 3–4 | Traffic cones / tyre stack | Medium |
-  | 5–9 | Tyre barrier (two lanes) | Hard |
-  | 10+ | Racing barrier across the road with one gap (green arrow) | Extreme |
+4. **Score = contributions.** A day's count is added only when you complete that day. The final score always equals the season total. Collisions cost speed, never points.
+5. Get your **results**, then export a **full-season 2× replay** as a GIF or MP4 with ready-to-paste README markdown.
 
-- **The car drives itself.** An autonomous driver plans a collision-free route over three logical lanes and steers smoothly into each gap before reaching it, then drifts back to the centre racing line.
-- **Score only increases when a day's stretch is completed**, by exactly that day's count. GAME OVER appears only after the last available day is finished.
-- **Nitro** (visual only) kicks in on 10+, 20+ and 30+ contribution days.
+**Manual controls:** <kbd>W</kbd>/<kbd>↑</kbd> throttle · <kbd>S</kbd>/<kbd>↓</kbd> brake · <kbd>A</kbd><kbd>D</kbd>/<kbd>←</kbd><kbd>→</kbd> steer · <kbd>Shift</kbd> nitro · <kbd>C</kbd> camera · <kbd>P</kbd>/<kbd>Esc</kbd> pause. On phones, on-screen steering, gas, brake and nitro buttons appear.
 
-**Controls:** `Space`/`P` pause · `R` restart · `M` sound on/off · `Enter` start. Sound is off until you turn it on.
+**Share links:** `…/github-f1-grand-prix/?user=octocat&year=2025&mode=manual` (also `quality=low|medium|high|ultra`, `env=day|sunset|night`, `demo=1`).
 
-**URL options:** `?year=2025` (past season) · `?duration=120` (race length, seconds) · `?autoplay=0` · `?demo=1` (synthetic data, clearly labelled **DEMO DATA**) · `?debug=1` (FPS + AI decision log in the console).
+### Put your replay on your profile
+1. On the results screen, choose **Download GIF** (README preset, about 9 MB for a 300-day season) and commit it next to your profile `README.md` without renaming it.
+2. Click **Copy README markdown** and paste it into that README. The image path is relative, so it works once the GIF is committed.
+3. For the **MP4**: edit your README on github.com and drag the video into the editor. GitHub uploads it and inserts a playable link.
 
-## 🛠️ Tech stack
+## 🛠️ Tech
+Three.js (WebGL 2) · vanilla ES modules · Vite · Cloudflare Workers · WebCodecs + [mediabunny](https://github.com/Vanilagy/mediabunny) (MP4) · [gifenc](https://github.com/mattdesl/gifenc) (GIF) · Vitest · Playwright · GitHub Actions/Pages.
+All 3D models, textures and sounds are procedurally generated in code: no third-party assets, team liveries or trademarks.
 
-Vanilla JavaScript ES modules · HTML5 Canvas 2D · Vite · Vitest · Playwright · Node.js · GitHub GraphQL API · GitHub Actions · GitHub Pages.
-Zero runtime dependencies. All graphics are original procedural pixel art and all sounds are synthesised with the Web Audio API.
+Docs: [Product](V2_PRD.md) · [Architecture](V2_ARCHITECTURE.md) · [Security](V2_SECURITY.md) · [Test report](V2_TEST_REPORT.md) · [Plan](V2_IMPLEMENTATION_PLAN.md) · [Tasks](V2_TASKS.md)
 
-## 🚀 Setup (for your own profile)
+## 🚀 Setup
 
-### 1. Set your username
+### Frontend (GitHub Pages)
+Already configured: **Settings → Pages → Source: GitHub Actions**. Every push to `main` runs tests and deploys. The owner's season (`githubUsername` in `game.config.json`) refreshes daily via `update-contributions.yml`, which uses the `GH_TOKEN` Actions secret (classic PAT, `read:user` only). Visitor lookups never use that token.
 
-Edit **`game.config.json`**. It's the only place the username lives:
+### Contributions API (Cloudflare Worker): needed for usernames other than the owner's
+GitHub's public calendar has no CORS headers, so browsers can't read it directly; the Worker fetches it server-side.
 
-```json
-{ "githubUsername": "your-github-username" }
-```
+1. `cd worker && npm install && npx wrangler login` (or create an API token with **Workers Scripts: Edit**).
+2. `npx wrangler deploy`. Note the URL, e.g. `https://github-grand-prix-api.<account>.workers.dev`.
+3. Put that URL in `game.config.json → "apiBaseUrl"` and push. The CSP `connect-src` is filled from it at build time.
+4. Optional automation: add repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. `worker.yml` then redeploys the Worker on changes, and skips deploy if they're absent.
 
-### 2. Create the `GH_TOKEN` secret (recommended)
+`worker/wrangler.toml` sets `ALLOWED_ORIGINS` (CORS), `FRONTEND_URL`, cache TTLs, and a Cloudflare rate limit (30 requests per minute per IP).
 
-1. Go to **GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token (classic)**.
-2. Name it e.g. `f1-grand-prix`, pick an expiry, and tick only **`read:user`**. No repository scopes are needed.
-3. Copy the token, then open **your repository → Settings → Secrets and variables → Actions → New repository secret**.
-4. Name: **`GH_TOKEN`**, Secret: paste the token → **Add secret**.
+### Optional: GitHub sign-in (private contribution counts)
+1. GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**. Homepage: your Pages URL. Callback: `https://<worker-url>/auth/callback`.
+2. In `worker/wrangler.toml` set `GITHUB_CLIENT_ID = "<client id>"`.
+3. `npx wrangler secret put GITHUB_CLIENT_SECRET` and `npx wrangler secret put SESSION_SECRET` (any random string of 32+ characters), then `npx wrangler deploy`.
+4. The landing page shows **Sign in with GitHub** once `/auth/me` reports OAuth configured. Scope is `read:user`; sessions are encrypted HttpOnly cookies. See [V2_SECURITY.md](V2_SECURITY.md).
 
-The token is only used by the `Update contributions` workflow, server-side. It is never sent to the browser, printed, or written to any file.
-If the secret is missing, the workflow falls back to GitHub's **public contribution calendar**, which needs no token at all.
-
-**Private contributions:** to have private-repository contributions counted (as anonymous counts, the same way your profile shows them), enable **Profile → Contribution settings → "Private contributions"**. This works with a `read:user` token and with the public fallback. Granting the token the broad `repo` scope also works, but isn't recommended.
-
-### 3. Enable GitHub Pages
-
-1. **Repository → Settings → Pages → Build and deployment → Source: GitHub Actions**.
-2. **Repository → Settings → Actions → General → Workflow permissions: Read and write permissions** → Save (lets the data workflow commit refreshed JSON with the built-in `GITHUB_TOKEN`).
-3. **Actions → Update contributions → Run workflow** once. When it finishes, **Deploy to GitHub Pages** runs automatically.
-4. The game is live at `https://<username>.github.io/<repository>/`. The build uses relative paths, so any repository name works.
-
-### Automation
-
-| Workflow | Trigger | What it does |
-| --- | --- | --- |
-| `update-contributions.yml` | Daily 01:17 UTC + manual (optional `year` input) | Fetches the season, validates it, refreshes the README stats, and commits **only if the data changed**. On any API failure nothing is written, so the last valid dataset stays live. During Jan 1–7 it also refreshes last season to capture Dec 31. |
-| `deploy.yml` | Push to `main`, after a successful data update, manual | Unit tests, data validation, Playwright browser tests, production build, Pages deploy. |
-
-Commits made with `GITHUB_TOKEN` don't trigger workflows, so there's no loop; the deploy follows data updates via `workflow_run`.
-
-## 💻 Local development
-
+## 💻 Development
 ```bash
 npm install
-npm run dev              # http://localhost:5173
-npm test                 # unit tests (Vitest)
-npx playwright install chromium && npm run test:e2e   # browser tests
-npm run build            # production build to dist/
-npm run fetch            # refresh data (public calendar; or GH_TOKEN via: node --env-file=.env scripts/fetch-contributions.js)
-npm run validate         # validate all data files
-npm run preview:gif      # re-record docs/preview.gif from the real renderer
+npm run dev            # http://localhost:5173. /api runs the real Worker code locally
+npm test               # unit + integration tests (game, physics, replay, export, Worker API, OAuth)
+npx playwright install chromium && npm run test:e2e
+npm run build
+npm run preview:gif    # re-record docs/preview.gif with the in-app exporter
+cd worker && npx wrangler dev   # the Worker in Cloudflare's local runtime
 ```
-
-## 🧱 Architecture
-
-```
-game.config.json            single source of configuration (username, pacing, thresholds)
-scripts/
-  fetch-contributions.js    GraphQL (GH_TOKEN) or public-calendar fetch → normalized, validated JSON
-  validate-contributions.js validates every season file + index
-  update-readme.js          rewrites the README stats block
-  generate-preview.js       records docs/preview.gif via Playwright + gifenc
-public/data/contributions/  <year>.json + index.json (generated, committed)
-src/
-  data/dataset.js           date math, normalization, validation, stats (shared by browser + Node)
-  data/loader.js            loads generated JSON in the browser (never calls the GitHub API)
-  game/track.js             procedural circuit: smooth curves, hills, scenery (typed arrays)
-  game/obstacles.js         contribution thresholds → obstacle rows with a guaranteed safe lane
-  game/planner.js           Viterbi lane planner + nearest-free-lane fallback
-  game/driver.js            autonomous driver: detection range, timed smooth manoeuvres, safety override
-  game/race.js              deterministic fixed-step simulation, lifecycle, scoring, collisions
-  render/sprites.js         original procedural pixel art (car, obstacles, scenery)
-  render/renderer.js        OutRun-style pseudo-3D projection, parallax, fog, nitro effects
-  ui/ui.js                  HUD + screens (DOM touched only when values change)
-  audio/audio.js            synthesised engine / road / nitro / finish sounds
-  main.js                   boot, requestAnimationFrame loop, controls
-tests/                      Vitest unit tests + Playwright e2e (tests/e2e)
-```
-
-**Why the car never crashes:** obstacle rows are generated around a "safe lane" that moves at most one lane per day, so a valid route always exists. The planner finds the minimum-steering route over the whole season (preferring the centre line), and the driver times each lane change to finish before the obstacle using the cruise speed as an upper bound. A safety controller overrides any plan that would enter a blocked lane. The tests plan routes for 25 randomized seasons and race full seasons end to end (including the fastest allowed pace and back-to-back extreme barriers), asserting zero collisions and an exact final score.
-
-**Determinism and performance:** the simulation advances in fixed 1/120 s steps, independent of refresh rate. Rendering happens at a fixed low internal resolution (pixel-art look, cheap on any device pixel ratio), scaled up with CSS. The render loop allocates nothing per segment.
-
-### Configuration reference (`game.config.json`)
-
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `githubUsername` | — | Whose contributions to race |
-| `raceMode` | `"yearly"` | The only supported mode: the yearly Grand Prix |
-| `selectedYear` | `"auto"` | `"auto"` = latest season with data, or a year like `2025` |
-| `autoPlay` / `autoPlayDelaySeconds` | `true` / `4` | Start automatically after the ready screen (off when the visitor prefers reduced motion) |
-| `showControls` | `true` | Show pause / restart / sound buttons |
-| `targetFPS` | `60` | Render frame cap |
-| `raceDurationSeconds` | `180` | Target race length |
-| `minSecondsPerDay` | `0.25` | Fastest pace per day (keeps lane changes smooth) |
-| `aiLookaheadDays` | `1.5` | AI detection distance, in days of track (≥ 1.1) |
-| `obstacleThresholds` | `1 / 3 / 5 / 10` | Contribution counts for easy / medium / hard / extreme obstacles |
-| `nitroThresholds` | `[10, 20, 30]` | Visual nitro levels |
-
-## ⚠️ Known limitations
-
-- GitHub's calendar uses your profile's timezone; the newest day may lag or lead UTC by a few hours until the next daily run.
-- `includePrivateContributions` isn't a config switch: the daily calendar can't split private from public counts per day, so private counts follow your profile's "Private contributions" setting.
-- GitHub disables scheduled workflows in repositories with no activity for 60 days. The daily data commits normally keep it active; if it gets paused, re-enable it from the Actions tab.
-- `docs/preview.gif` is recorded locally (`npm run preview:gif`) rather than in CI, so it shows the season at recording time. The stats table above stays current.
-
-## 🙏 Credits
-
-Built by [@roshanimmanuel792](https://github.com/roshanimmanuel792). Inspired by classic pseudo-3D arcade racers such as OutRun and by Jake Gordon's write-ups on pseudo-3D road rendering.
-All car, obstacle and scenery art and all audio are original to this project. No real team liveries, logos or trademarks are used. Contribution data comes from GitHub.
