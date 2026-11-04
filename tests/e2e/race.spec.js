@@ -39,7 +39,7 @@ async function openRace(page, user = 'octo-tester', extra = '') {
 
 test('landing page renders the 3D scene and the lookup form', async ({ page }) => {
   const errors = watchErrors(page);
-  await page.goto('./');
+  await page.goto('./?quality=low');
   await waitState(page, 'landing');
   await expect(page.getByRole('heading', { name: /Your GitHub year/ })).toBeVisible();
   await expect(page.getByLabel('GitHub username')).toBeFocused();
@@ -50,7 +50,7 @@ test('landing page renders the 3D scene and the lookup form', async ({ page }) =
 
 test('invalid usernames are rejected without calling the API', async ({ page }) => {
   const calls = await mockApi(page);
-  await page.goto('./');
+  await page.goto('./?quality=low');
   await waitState(page, 'landing');
   await page.getByLabel('GitHub username').fill('-not valid-');
   await page.getByRole('button', { name: 'Start engine' }).click();
@@ -60,7 +60,7 @@ test('invalid usernames are rejected without calling the API', async ({ page }) 
 
 test('unknown users get a friendly error and can go back', async ({ page }) => {
   await mockApi(page);
-  await page.goto('./');
+  await page.goto('./?quality=low');
   await waitState(page, 'landing');
   await page.getByLabel('GitHub username').fill('nobody-here');
   await page.getByLabel('Season').selectOption('2025');
