@@ -17,6 +17,7 @@ All results below were produced on 2026-11-04 on branch `feature/v2-realistic-mu
 | Data validation (`npm run validate`) | 2025 ✓, 2026 ✓ | |
 | Production build | ✓ | main chunk 704 KB (187 KB gzip, mostly three.js); MP4 encoder 52 KB gzip and GIF code lazy-loaded |
 | Owner updater (`fetch-contributions.js`, public fallback) | ✓ 2026: 328 contributions / 308 days | changes reverted, to leave daily data to the bot |
+| **GitHub Actions on PR #1** (ubuntu, SwiftShader WebGL, ffprobe installed) | ✅ 147/147 unit; 23 passed / 3 skipped by design (incl. MP4 export + ffprobe); build ✓ | run 41903141817 |
 | Worker in Cloudflare's local runtime (`wrangler dev`) against live GitHub | ✓ | gaearon 2026: 775 / 308 days (MISS, then HIT); octocat 2024: 366 days (leap year); unknown user 404; bad name 400; OAuth unconfigured 501; RATE_LIMITER binding loaded |
 
 ### What the new tests cover

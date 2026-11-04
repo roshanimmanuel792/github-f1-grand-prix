@@ -19,3 +19,6 @@ Fixes found by testing along the way:
 - `PCFSoftShadowMap` removal in three r187.
 - gifenc's CommonJS entry under Node.
 - The 13 MB GIF, reduced to 9.1 MB.
+- Found by CI on PR #1:
+  - Error screens didn't update the app state (fixed in `main.js`).
+  - Browser tests waited on wall-clock time, which breaks at software-WebGL frame rates; they now wait on simulation state and use the Low preset.
