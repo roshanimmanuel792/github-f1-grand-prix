@@ -1,0 +1,14 @@
+{
+  "githubUsername": "roshanimmanuel792",
+  "raceMode": "yearly",
+  "selectedYear": "auto",
+  "autoPlay": true,
+  "autoPlayDelaySeconds": 4,
+  "showControls": true,
+  "targetFPS": 60,
+  "raceDurationSeconds": 180,
+  "minSecondsPerDay": 0.25,
+  "aiLookaheadDays": 1.5,
+  "obstacleThresholds": { "small": 1, "medium": 3, "hard": 5, "extreme": 10 },
+  "nitroThresholds": [10, 20, 30]
+}

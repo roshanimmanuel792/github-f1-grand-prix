@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="An autonomous pseudo-3D Formula 1 arcade race built from a GitHub contribution calendar." />
+    <meta name="theme-color" content="#0d1117" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>GitHub F1 Grand Prix</title>
+  </head>
+  <body data-state="loading">
+    <main id="stage">
+      <canvas id="game" role="img" aria-label="Pseudo-3D racing view: an autonomous Formula 1 car drives through obstacles generated from daily GitHub contributions"></canvas>
+
+      <div id="hud" hidden>
+        <div class="hud-panel hud-left">
+          <div class="brand">GITHUB GRAND PRIX</div>
+          <div><span class="k">YEAR</span> <b id="hud-year"></b></div>
+          <div><span class="k">DATE</span> <b id="hud-date"></b></div>
+          <div><span class="k">TODAY</span> <b id="hud-day"></b></div>
+        </div>
+        <div class="hud-panel hud-right">
+          <div class="k">SCORE</div>
+          <div id="hud-score" class="score">0</div>
+          <div><span class="k">TOTAL</span> <b id="hud-total"></b></div>
+          <div><span class="k">STREAK</span> <b id="hud-streak"></b> <span class="k">BEST</span> <b id="hud-best"></b></div>
+        </div>
+        <div id="hud-status" class="status"></div>
+        <div class="hud-bottom">
+          <div class="progress" aria-hidden="true"><div id="hud-bar"></div></div>
+          <div class="progress-text"><span id="hud-days"></span><span id="hud-pct"></span></div>
+        </div>
+        <div id="demo-badge" hidden>DEMO DATA</div>
+        <div id="debug" hidden></div>
+      </div>
+
+      <section id="screen-loading" class="screen" aria-live="polite">
+        <div class="card">
+          <h1 class="title">GITHUB<br /><span>F1 GRAND PRIX</span></h1>
+          <div class="loadbar"><div id="load-bar"></div></div>
+          <p id="load-text">Warming up tyres…</p>
+        </div>
+      </section>
+
+      <section id="screen-ready" class="screen" hidden>
+        <div class="card">
+          <h1 class="title">GITHUB<br /><span>F1 GRAND PRIX</span></h1>
+          <p id="ready-demo" class="demo-warning" hidden>DEMO DATA — synthetic contributions, not a real GitHub profile.</p>
+          <dl class="facts">
+            <div><dt>DRIVER</dt><dd id="ready-user"></dd></div>
+            <div><dt>SEASON</dt><dd id="ready-year"></dd></div>
+            <div><dt>CONTRIBUTIONS</dt><dd id="ready-total"></dd></div>
+            <div><dt>RACE DAYS</dt><dd id="ready-days"></dd></div>
+            <div><dt>CALENDAR</dt><dd id="ready-range"></dd></div>
+            <div><dt>LONGEST STREAK</dt><dd id="ready-streak"></dd></div>
+          </dl>
+          <label id="year-field" class="year-field" hidden>SEASON <select id="year-select"></select></label>
+          <button id="btn-start" class="btn primary">START RACE</button>
+          <p id="autostart" class="hint" aria-live="polite"></p>
+          <p class="hint">Every day is a stretch of track. Contributions become obstacles; the car drives itself.</p>
+          <p id="ready-source" class="source"></p>
+        </div>
+      </section>
+
+      <section id="screen-paused" class="screen" hidden>
+        <div class="card small">
+          <h2 class="title"><span>PAUSED</span></h2>
+          <button id="btn-resume" class="btn primary">RESUME</button>
+        </div>
+      </section>
+
+      <section id="screen-over" class="screen" role="dialog" aria-labelledby="over-title" hidden>
+        <div class="card">
+          <h2 id="over-title" class="title gameover">GAME OVER</h2>
+          <p class="brand">GITHUB GRAND PRIX · <span id="over-user"></span> · <span id="over-year"></span></p>
+          <div class="final">
+            <div class="k">FINAL SCORE</div>
+            <div id="over-score" class="score big"></div>
+          </div>
+          <dl class="facts">
+            <div><dt>TOTAL CONTRIBUTIONS</dt><dd id="over-total"></dd></div>
+            <div><dt>DAYS COMPLETED</dt><dd id="over-days"></dd></div>
+            <div><dt>RACE COMPLETION</dt><dd id="over-completion"></dd></div>
+            <div><dt>FINISH DATE</dt><dd id="over-finish"></dd></div>
+            <div><dt>HIGHEST DAY</dt><dd id="stat-best"></dd></div>
+            <div><dt>AVG / ACTIVE DAY</dt><dd id="stat-avg"></dd></div>
+            <div><dt>ACTIVE DAYS</dt><dd id="stat-active"></dd></div>
+            <div><dt>ZERO DAYS</dt><dd id="stat-zero"></dd></div>
+            <div><dt>LONGEST STREAK</dt><dd id="stat-longest"></dd></div>
+            <div><dt>CURRENT STREAK</dt><dd id="stat-current"></dd></div>
+            <div><dt>OBSTACLES CLEARED</dt><dd id="stat-obstacles"></dd></div>
+          </dl>
+          <div class="actions">
+            <button id="btn-race-again" class="btn primary">RACE AGAIN</button>
+            <button id="btn-restart-over" class="btn">RESTART RACE</button>
+            <a class="btn profile-link" href="https://github.com/" target="_blank" rel="noopener">VIEW GITHUB PROFILE</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-error" class="screen" role="alert" hidden>
+        <div class="card">
+          <h2 class="title"><span>RED FLAG</span></h2>
+          <p id="error-message"></p>
+          <p class="hint">
+            The game reads <code>data/contributions/*.json</code> generated by the
+            <b>Update contributions</b> GitHub Action. Run it from the repository's Actions tab, then retry.
+          </p>
+          <div class="actions">
+            <button id="btn-retry" class="btn primary">RETRY</button>
+            <button id="btn-demo" class="btn">PLAY DEMO DATA</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="controls" hidden>
+        <button id="btn-pause" class="btn mini">PAUSE</button>
+        <button id="btn-restart" class="btn mini">RESTART</button>
+        <button id="btn-mute" class="btn mini" aria-pressed="false">SOUND OFF</button>
+      </div>
+      <noscript><p class="noscript">GitHub F1 Grand Prix needs JavaScript and HTML5 Canvas.</p></noscript>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

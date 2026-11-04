@@ -1,0 +1,28 @@
+{
+  "name": "github-f1-grand-prix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An autonomous pseudo-3D Formula 1 arcade race generated from a GitHub contribution calendar.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "fetch": "node scripts/fetch-contributions.js",
+    "validate": "node scripts/validate-contributions.js",
+    "readme": "node scripts/update-readme.js",
+    "preview:gif": "vite build && node scripts/generate-preview.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "gifenc": "^1.0.3",
+    "pngjs": "^7.0.0",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  }
+}

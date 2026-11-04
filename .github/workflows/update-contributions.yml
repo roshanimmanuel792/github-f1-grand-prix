@@ -1,0 +1,61 @@
+name: Update contributions
+
+on:
+  schedule:
+    - cron: '17 1 * * *' # daily at 01:17 UTC (off the busy top of the hour)
+  workflow_dispatch:
+    inputs:
+      year:
+        description: 'Season to fetch, e.g. 2025 (blank = current year)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write # commit refreshed data with the built-in GITHUB_TOKEN
+
+concurrency:
+  group: update-contributions
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # GH_TOKEN is only exposed to this step. If the secret is missing, the script falls back
+      # to the public contribution calendar. On failure nothing is written, so the last valid
+      # dataset stays live.
+      - name: Fetch contributions
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          YEAR: ${{ inputs.year }}
+        run: node scripts/fetch-contributions.js
+
+      - name: Validate datasets
+        run: npm run validate
+
+      - name: Refresh README stats
+        run: npm run readme
+
+      # Pushes made with GITHUB_TOKEN never trigger other workflows, so there is no loop;
+      # deploy.yml picks the new data up through its workflow_run trigger.
+      - name: Commit only if data changed
+        run: |
+          if git diff --quiet -- public/data README.md && [ -z "$(git status --porcelain -- public/data)" ]; then
+            echo "No contribution changes; nothing to commit."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/data README.md
+          git commit -m "chore(data): update GitHub contributions"
+          git push
