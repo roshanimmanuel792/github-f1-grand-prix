@@ -3,123 +3,220 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="description" content="An autonomous pseudo-3D Formula 1 arcade race built from a GitHub contribution calendar." />
-    <meta name="theme-color" content="#0d1117" />
+    <meta name="description" content="Race any GitHub user's contribution year in 3D. Every day is a stretch of track; every contribution is an obstacle and a point." />
+    <meta name="theme-color" content="#0b0e13" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://github.com https://avatars.githubusercontent.com; media-src 'self' blob:; connect-src 'self' %API_ORIGIN%; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>GitHub F1 Grand Prix</title>
+    <title>GitHub Grand Prix</title>
   </head>
-  <body data-state="loading">
-    <main id="stage">
-      <canvas id="game" role="img" aria-label="Pseudo-3D racing view: an autonomous Formula 1 car drives through obstacles generated from daily GitHub contributions"></canvas>
+  <body data-state="boot">
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
 
-      <div id="hud" hidden>
-        <div class="hud-panel hud-left">
-          <div class="brand">GITHUB GRAND PRIX</div>
-          <div><span class="k">YEAR</span> <b id="hud-year"></b></div>
-          <div><span class="k">DATE</span> <b id="hud-date"></b></div>
-          <div><span class="k">TODAY</span> <b id="hud-day"></b></div>
-        </div>
-        <div class="hud-panel hud-right">
-          <div class="k">SCORE</div>
-          <div id="hud-score" class="score">0</div>
-          <div><span class="k">TOTAL</span> <b id="hud-total"></b></div>
-          <div><span class="k">STREAK</span> <b id="hud-streak"></b> <span class="k">BEST</span> <b id="hud-best"></b></div>
-        </div>
-        <div id="hud-status" class="status"></div>
-        <div class="hud-bottom">
-          <div class="progress" aria-hidden="true"><div id="hud-bar"></div></div>
-          <div class="progress-text"><span id="hud-days"></span><span id="hud-pct"></span></div>
-        </div>
-        <div id="demo-badge" hidden>DEMO DATA</div>
-        <div id="debug" hidden></div>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="GitHub Grand Prix home">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 22 L14 6 h6 L10 22z" fill="#2ea043" /><path d="M14 22 L24 6 h4 L18 22z" fill="#f0f6fc" /></svg>
+        <span>GITHUB <b>GRAND PRIX</b></span>
+      </a>
+      <div class="topbar-actions">
+        <span id="auth-chip" class="chip" hidden></span>
+        <button id="btn-signout" class="btn ghost small" type="button" hidden>Sign out</button>
       </div>
+    </header>
 
-      <section id="screen-loading" class="screen" aria-live="polite">
-        <div class="card">
-          <h1 class="title">GITHUB<br /><span>F1 GRAND PRIX</span></h1>
-          <div class="loadbar"><div id="load-bar"></div></div>
-          <p id="load-text">Warming up tyres…</p>
-        </div>
-      </section>
-
-      <section id="screen-ready" class="screen" hidden>
-        <div class="card">
-          <h1 class="title">GITHUB<br /><span>F1 GRAND PRIX</span></h1>
-          <p id="ready-demo" class="demo-warning" hidden>DEMO DATA — synthetic contributions, not a real GitHub profile.</p>
-          <dl class="facts">
-            <div><dt>DRIVER</dt><dd id="ready-user"></dd></div>
-            <div><dt>SEASON</dt><dd id="ready-year"></dd></div>
-            <div><dt>CONTRIBUTIONS</dt><dd id="ready-total"></dd></div>
-            <div><dt>RACE DAYS</dt><dd id="ready-days"></dd></div>
-            <div><dt>CALENDAR</dt><dd id="ready-range"></dd></div>
-            <div><dt>LONGEST STREAK</dt><dd id="ready-streak"></dd></div>
-          </dl>
-          <label id="year-field" class="year-field" hidden>SEASON <select id="year-select"></select></label>
-          <button id="btn-start" class="btn primary">START RACE</button>
-          <p id="autostart" class="hint" aria-live="polite"></p>
-          <p class="hint">Every day is a stretch of track. Contributions become obstacles; the car drives itself.</p>
-          <p id="ready-source" class="source"></p>
-        </div>
-      </section>
-
-      <section id="screen-paused" class="screen" hidden>
-        <div class="card small">
-          <h2 class="title"><span>PAUSED</span></h2>
-          <button id="btn-resume" class="btn primary">RESUME</button>
-        </div>
-      </section>
-
-      <section id="screen-over" class="screen" role="dialog" aria-labelledby="over-title" hidden>
-        <div class="card">
-          <h2 id="over-title" class="title gameover">GAME OVER</h2>
-          <p class="brand">GITHUB GRAND PRIX · <span id="over-user"></span> · <span id="over-year"></span></p>
-          <div class="final">
-            <div class="k">FINAL SCORE</div>
-            <div id="over-score" class="score big"></div>
-          </div>
-          <dl class="facts">
-            <div><dt>TOTAL CONTRIBUTIONS</dt><dd id="over-total"></dd></div>
-            <div><dt>DAYS COMPLETED</dt><dd id="over-days"></dd></div>
-            <div><dt>RACE COMPLETION</dt><dd id="over-completion"></dd></div>
-            <div><dt>FINISH DATE</dt><dd id="over-finish"></dd></div>
-            <div><dt>HIGHEST DAY</dt><dd id="stat-best"></dd></div>
-            <div><dt>AVG / ACTIVE DAY</dt><dd id="stat-avg"></dd></div>
-            <div><dt>ACTIVE DAYS</dt><dd id="stat-active"></dd></div>
-            <div><dt>ZERO DAYS</dt><dd id="stat-zero"></dd></div>
-            <div><dt>LONGEST STREAK</dt><dd id="stat-longest"></dd></div>
-            <div><dt>CURRENT STREAK</dt><dd id="stat-current"></dd></div>
-            <div><dt>OBSTACLES CLEARED</dt><dd id="stat-obstacles"></dd></div>
-          </dl>
-          <div class="actions">
-            <button id="btn-race-again" class="btn primary">RACE AGAIN</button>
-            <button id="btn-restart-over" class="btn">RESTART RACE</button>
-            <a class="btn profile-link" href="https://github.com/" target="_blank" rel="noopener">VIEW GITHUB PROFILE</a>
-          </div>
-        </div>
-      </section>
-
-      <section id="screen-error" class="screen" role="alert" hidden>
-        <div class="card">
-          <h2 class="title"><span>RED FLAG</span></h2>
-          <p id="error-message"></p>
-          <p class="hint">
-            The game reads <code>data/contributions/*.json</code> generated by the
-            <b>Update contributions</b> GitHub Action. Run it from the repository's Actions tab, then retry.
+    <main>
+      <section id="screen-landing" class="screen" aria-labelledby="landing-title" hidden>
+        <div class="hero">
+          <p class="eyebrow">Contribution racing · season edition</p>
+          <h1 id="landing-title">Your GitHub year,<br /><em>raced.</em></h1>
+          <p class="lede">Enter any GitHub username. Every day of the season becomes a stretch of circuit; every contribution becomes an obstacle to beat and a point on the board.</p>
+          <form id="lookup" class="lookup" novalidate>
+            <div class="field">
+              <label for="username">GitHub username</label>
+              <div class="input-wrap"><span aria-hidden="true">github.com/</span><input id="username" name="username" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="39" placeholder="octocat" required /></div>
+            </div>
+            <div class="field season">
+              <label for="season">Season</label>
+              <select id="season" name="season"></select>
+            </div>
+            <button id="btn-lookup" class="btn primary" type="submit">Start engine</button>
+          </form>
+          <p id="lookup-error" class="form-error" role="alert"></p>
+          <p class="fine">
+            Uses only <strong>public</strong> contribution data. No sign-in needed.
+            <span id="signin-wrap" hidden>Want private contribution counts too? <button id="btn-signin" class="link" type="button">Sign in with GitHub</button> (read-only profile access).</span>
+            <button id="btn-demo" class="link" type="button">Try a demo season</button>
           </p>
+        </div>
+      </section>
+
+      <section id="screen-loading" class="screen" aria-live="polite" hidden>
+        <div class="loader">
+          <div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <p id="loading-text">Warming up tyres…</p>
+        </div>
+      </section>
+
+      <section id="screen-setup" class="screen" aria-labelledby="setup-user" hidden>
+        <div class="panel setup">
+          <div class="driver">
+            <img id="setup-avatar" alt="" width="64" height="64" hidden />
+            <div>
+              <h2 id="setup-user"></h2>
+              <p id="setup-meta" class="muted"></p>
+            </div>
+            <span id="setup-demo" class="badge warn" hidden>DEMO DATA</span>
+          </div>
+          <dl class="stats">
+            <div><dt>Contributions</dt><dd id="setup-total"></dd></div>
+            <div><dt>Race days</dt><dd id="setup-days"></dd></div>
+            <div><dt>Active days</dt><dd id="setup-active"></dd></div>
+            <div><dt>Longest streak</dt><dd id="setup-streak"></dd></div>
+            <div><dt>Best day</dt><dd id="setup-best"></dd></div>
+            <div><dt>Obstacles</dt><dd id="setup-obstacles"></dd></div>
+          </dl>
+          <fieldset class="modes">
+            <legend>Driving mode</legend>
+            <label class="mode"><input type="radio" name="mode" value="ai" checked /><span><b>Autonomous</b><small>The AI plans a safe line through every obstacle.</small></span></label>
+            <label class="mode"><input type="radio" name="mode" value="manual" /><span><b>Manual</b><small>You drive. Collisions cost speed, never points.</small></span></label>
+          </fieldset>
+          <div class="options">
+            <label>Camera<select id="opt-camera"><option value="chase">Chase</option><option value="close">Close chase</option><option value="cockpit">Cockpit</option><option value="tv">TV director</option></select></label>
+            <label>Graphics<select id="opt-quality"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="ultra">Ultra</option></select></label>
+            <label>Conditions<select id="opt-env"><option value="day">Day</option><option value="sunset">Sunset</option><option value="night">Night</option></select></label>
+          </div>
+          <p class="fine keys">Manual: <kbd>W</kbd>/<kbd>↑</kbd> throttle · <kbd>S</kbd>/<kbd>↓</kbd> brake · <kbd>A</kbd><kbd>D</kbd>/<kbd>←</kbd><kbd>→</kbd> steer · <kbd>Shift</kbd> nitro · <kbd>C</kbd> camera · <kbd>P</kbd>/<kbd>Esc</kbd> pause</p>
           <div class="actions">
-            <button id="btn-retry" class="btn primary">RETRY</button>
-            <button id="btn-demo" class="btn">PLAY DEMO DATA</button>
+            <button id="btn-back" class="btn ghost" type="button">Change driver</button>
+            <button id="btn-start" class="btn primary" type="button">Start race</button>
           </div>
         </div>
       </section>
 
-      <div id="controls" hidden>
-        <button id="btn-pause" class="btn mini">PAUSE</button>
-        <button id="btn-restart" class="btn mini">RESTART</button>
-        <button id="btn-mute" class="btn mini" aria-pressed="false">SOUND OFF</button>
-      </div>
-      <noscript><p class="noscript">GitHub F1 Grand Prix needs JavaScript and HTML5 Canvas.</p></noscript>
+      <section id="screen-paused" class="screen" aria-labelledby="paused-title" hidden>
+        <div class="panel narrow">
+          <h2 id="paused-title">Paused</h2>
+          <div class="options">
+            <label>Camera<select id="pause-camera"><option value="chase">Chase</option><option value="close">Close chase</option><option value="cockpit">Cockpit</option><option value="tv">TV director</option></select></label>
+            <label>Graphics<select id="pause-quality"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="ultra">Ultra</option></select></label>
+          </div>
+          <div class="actions column">
+            <button id="btn-resume" class="btn primary" type="button">Resume</button>
+            <button id="btn-restart" class="btn" type="button">Restart race</button>
+            <button id="btn-menu" class="btn ghost" type="button">Quit to menu</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="screen-results" class="screen" role="dialog" aria-labelledby="results-title" hidden>
+        <div class="panel results">
+          <p class="eyebrow" id="results-sub"></p>
+          <h2 id="results-title">Game over</h2>
+          <div class="final"><span class="muted">Final score</span><strong id="res-score"></strong><span id="res-check" class="muted"></span></div>
+          <dl class="stats wide">
+            <div><dt>Total contributions</dt><dd id="res-total"></dd></div>
+            <div><dt>Race completion</dt><dd id="res-completion"></dd></div>
+            <div><dt>Days completed</dt><dd id="res-days"></dd></div>
+            <div><dt>Active days</dt><dd id="res-active"></dd></div>
+            <div><dt>Zero days</dt><dd id="res-zero"></dd></div>
+            <div><dt>Longest streak</dt><dd id="res-streak"></dd></div>
+            <div><dt>Best day</dt><dd id="res-best"></dd></div>
+            <div><dt>Obstacles cleared</dt><dd id="res-cleared"></dd></div>
+            <div><dt>Collisions</dt><dd id="res-collisions"></dd></div>
+            <div><dt>Driving mode</dt><dd id="res-mode"></dd></div>
+          </dl>
+          <div class="actions wrap">
+            <button id="btn-again" class="btn primary" type="button">Race again</button>
+            <button id="btn-gif" class="btn" type="button">Download GIF</button>
+            <button id="btn-mp4" class="btn" type="button">Download MP4</button>
+            <button id="btn-readme" class="btn" type="button">Copy README markdown</button>
+            <button id="btn-share" class="btn" type="button">Share race link</button>
+            <a id="btn-profile" class="btn ghost" href="https://github.com/" target="_blank" rel="noopener noreferrer">View GitHub profile</a>
+            <button id="btn-results-menu" class="btn ghost" type="button">New driver</button>
+          </div>
+          <div class="export-opts">
+            <label>GIF size<select id="opt-gif"></select></label>
+            <label>Video<select id="opt-video"></select></label>
+            <span id="video-support" class="muted"></span>
+          </div>
+          <div id="export" class="export" hidden>
+            <div class="export-head"><b id="export-title"></b><button id="btn-cancel" class="btn ghost small" type="button">Cancel</button></div>
+            <div class="bar" role="progressbar" aria-label="Replay export progress" aria-valuemin="0" aria-valuemax="100"><i id="export-bar"></i></div>
+            <p id="export-status" class="muted" aria-live="polite"></p>
+            <div id="export-result" hidden></div>
+          </div>
+          <details class="howto">
+            <summary>How to put the replay on your GitHub profile</summary>
+            <ol>
+              <li>Download the GIF and commit it to your profile repository (<code>github.com/&lt;you&gt;/&lt;you&gt;</code>) next to <code>README.md</code>, keeping its file name.</li>
+              <li>Copy the README markdown and paste it into that README. The image link is relative, so it works as soon as the GIF is committed.</li>
+              <li>For the MP4: edit your README on github.com and drag the video into the editor. GitHub uploads it and inserts a link that plays inline.</li>
+            </ol>
+          </details>
+          <p id="toast" class="toast" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="screen-error" class="screen" role="alert" aria-labelledby="error-title" hidden>
+        <div class="panel narrow">
+          <h2 id="error-title">Red flag</h2>
+          <p id="error-message"></p>
+          <div class="actions">
+            <button id="btn-error-retry" class="btn primary" type="button">Try again</button>
+            <button id="btn-error-back" class="btn ghost" type="button">Back</button>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <div id="hud" class="hud" hidden>
+      <div class="hud-panel tl">
+        <div class="hud-user"><img id="hud-avatar" alt="" width="36" height="36" hidden /><div><b id="hud-user"></b><span id="hud-year"></span></div></div>
+        <div class="hud-row"><span id="hud-date"></span><span id="hud-today"></span></div>
+      </div>
+      <div class="hud-panel tr">
+        <span class="hud-label">Score</span>
+        <strong id="hud-score">0</strong>
+        <span class="hud-total">of <span id="hud-total"></span></span>
+      </div>
+      <div id="hud-status" class="hud-status"></div>
+      <div class="hud-panel bl">
+        <div class="speed"><strong id="hud-speed">0</strong><span>km/h</span></div>
+        <div class="hud-meta"><span id="hud-mode"></span><span id="hud-camera"></span></div>
+        <div id="hud-nitro" class="nitro" hidden><i id="hud-nitro-bar"></i></div>
+      </div>
+      <div class="hud-panel br">
+        <div><span class="hud-label">Cleared</span><b id="hud-cleared">0</b></div>
+        <div><span class="hud-label">Hits</span><b id="hud-hits">0</b></div>
+        <div><span class="hud-label">Streak</span><b id="hud-streak">0</b></div>
+        <div><span class="hud-label">Best day</span><b id="hud-best"></b></div>
+      </div>
+      <div class="hud-progress">
+        <div class="bar"><i id="hud-bar"></i></div>
+        <div class="hud-progress-text"><span id="hud-days"></span><span id="hud-pct"></span></div>
+      </div>
+      <div class="hud-buttons">
+        <button id="btn-pause" class="btn ghost small" type="button" aria-label="Pause">Pause</button>
+        <button id="btn-cam" class="btn ghost small" type="button" aria-label="Switch camera">Camera</button>
+        <button id="btn-mute" class="btn ghost small" type="button" aria-pressed="false">Sound off</button>
+      </div>
+      <div id="hud-debug" class="hud-debug" hidden></div>
+    </div>
+
+    <div id="touch" class="touch" hidden>
+      <div class="touch-left">
+        <button data-input="LEFT" aria-label="Steer left">◀</button>
+        <button data-input="RIGHT" aria-label="Steer right">▶</button>
+      </div>
+      <div class="touch-right">
+        <button data-input="NITRO" class="nitro-btn" aria-label="Nitro">N₂O</button>
+        <button data-input="BRAKE" aria-label="Brake">BRAKE</button>
+        <button data-input="THROTTLE" class="go" aria-label="Accelerate">GAS</button>
+      </div>
+    </div>
+
+    <noscript><p class="noscript">GitHub Grand Prix needs JavaScript and WebGL.</p></noscript>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
