@@ -17,9 +17,9 @@
 <!-- STATS:START -->
 | Season | Final score | Race days | Active days | Zero days | Longest streak | Current streak | Best day |
 | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| **2026** | **339** | 317 | 92 | 225 | 13 days | 1 days | 32 (2026-05-09) |
+| **2026** | **339** | 318 | 92 | 226 | 13 days | 0 days | 32 (2026-05-09) |
 
-<sub>Contributions from 2026-01-01 to 2026-11-13 · source: GitHub GraphQL API · refreshed daily by GitHub Actions</sub>
+<sub>Contributions from 2026-01-01 to 2026-11-14 · source: GitHub GraphQL API · refreshed daily by GitHub Actions</sub>
 <!-- STATS:END -->
 
 The final score is always the exact sum of the season's daily contributions — no bonuses, no multipliers.
